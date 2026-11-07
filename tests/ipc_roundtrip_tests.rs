@@ -1,11 +1,11 @@
-use muconde_ipc::control::{
+use mu_cd_ipc::control::{
     create_fory_runtime, ArtifactTaintNotification, DeploymentLeaseGrant, DeploymentLeaseRequest,
     DeploymentLeaseRevoke, DeploymentSlot, HealthProbeTelemetry, HeartbeatTelemetry,
     IntegrationTestReport, RollbackCommand, SlotSwapCommand, StageDeploymentRequest,
     StageDeploymentResponse,
 };
-use muconde_ipc::error::IpcError;
-use muconde_ipc::framing::{
+use mu_cd_ipc::error::IpcError;
+use mu_cd_ipc::framing::{
     read_frame, write_frame, IpcHeader, CURRENT_VERSION, HEADER_SIZE, MAGIC, MAX_FRAME_SIZE,
     MSG_TYPE_ARTIFACT_TAINT, MSG_TYPE_HEALTH_PROBE, MSG_TYPE_HEARTBEAT, MSG_TYPE_IT_REPORT,
     MSG_TYPE_LEASE_GRANT, MSG_TYPE_LEASE_REQ, MSG_TYPE_LEASE_REVOKE, MSG_TYPE_ROLLBACK,

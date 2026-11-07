@@ -1,16 +1,16 @@
-# MuConDe-ipc
+# mu-cd-ipc
 
 <p align="center">
   <a href="https://hook.lma1980.duckdns.org/jobs">
-    <img src="https://hook.lma1980.duckdns.org/cards/LMA1980/MuConDe-ipc/card.svg" alt="MuConDe-ipc Factory Scorecard" width="520"/>
+    <img src="https://hook.lma1980.duckdns.org/cards/LMA1980/mu-cd-ipc/card.svg" alt="mu-cd-ipc Factory Scorecard" width="520"/>
   </a>
 </p>
 
 <p align="center">
-  <a href="https://hook.lma1980.duckdns.org/jobs"><img src="https://hook.lma1980.duckdns.org/badges/LMA1980/MuConDe-ipc/status.svg" alt="CI Status"/></a>
-  <a href="https://hook.lma1980.duckdns.org/jobs"><img src="https://hook.lma1980.duckdns.org/badges/LMA1980/MuConDe-ipc/score.svg" alt="Quality Score"/></a>
-  <a href="https://hook.lma1980.duckdns.org/jobs"><img src="https://hook.lma1980.duckdns.org/badges/LMA1980/MuConDe-ipc/coverage.svg" alt="Coverage"/></a>
-  <a href="https://hook.lma1980.duckdns.org/jobs"><img src="https://hook.lma1980.duckdns.org/badges/LMA1980/MuConDe-ipc/benchmark.svg" alt="Benchmark"/></a>
+  <a href="https://hook.lma1980.duckdns.org/jobs"><img src="https://hook.lma1980.duckdns.org/badges/LMA1980/mu-cd-ipc/status.svg" alt="CI Status"/></a>
+  <a href="https://hook.lma1980.duckdns.org/jobs"><img src="https://hook.lma1980.duckdns.org/badges/LMA1980/mu-cd-ipc/score.svg" alt="Quality Score"/></a>
+  <a href="https://hook.lma1980.duckdns.org/jobs"><img src="https://hook.lma1980.duckdns.org/badges/LMA1980/mu-cd-ipc/coverage.svg" alt="Coverage"/></a>
+  <a href="https://hook.lma1980.duckdns.org/jobs"><img src="https://hook.lma1980.duckdns.org/badges/LMA1980/mu-cd-ipc/benchmark.svg" alt="Benchmark"/></a>
 </p>
 
 ---
@@ -21,7 +21,7 @@ High-performance, zero-copy inter-process communication (IPC) and distributed RP
 
 ## Protocol Framing
 
-`MuConDe-ipc` uses an aligned 24-byte binary framing header (`IpcHeader`) compatible with `zerocopy::FromBytes` and `zerocopy::IntoBytes`.
+`mu-cd-ipc` uses an aligned 24-byte binary framing header (`IpcHeader`) compatible with `zerocopy::FromBytes` and `zerocopy::IntoBytes`.
 
 ```text
 +-----------------------+----------------------------------------------------+
@@ -94,9 +94,9 @@ fory-encoded struct registered under the listed fory ID (see `create_fory_runtim
 protocol version:
 
 1. While the ipc change is still an open PR, a downstream feature branch may temporarily point at
-   the ipc feature branch: `muconde-ipc = { git = "https://github.com/LMA1980/MuConDe-ipc.git", branch = "feat/<name>" }`.
+   the ipc feature branch: `mu-cd-ipc = { git = "https://github.com/LMA1980/mu-cd-ipc.git", branch = "feat/<name>" }`.
 2. After the ipc PR merges, switch the dependency back to `branch = "main"` and run
-   `cargo update -p muconde-ipc` so `Cargo.lock` pins the merged commit.
+   `cargo update -p mu-cd-ipc` so `Cargo.lock` pins the merged commit.
 3. Deploy in order: controller first (it tolerates both old and new agents), then agents. Old
    controllers simply skip the new frames, so either order is safe for 0.2.0.
 
