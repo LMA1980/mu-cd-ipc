@@ -6,7 +6,7 @@
 //! receives the aggregate `IntegrationTestReport` that follows.
 
 use fory::Fory;
-use muconde_ipc::control::{
+use mu_cd_ipc::control::{
     create_fory_runtime, ArtifactTaintNotification, DeploymentLeaseGrant, DeploymentLeaseRequest,
     DeploymentLeaseRevoke, DeploymentSlot, HealthProbeTelemetry, HeartbeatTelemetry,
     IntegrationTestProgress, IntegrationTestReport, RollbackCommand, SlotSwapCommand,
@@ -16,7 +16,7 @@ use muconde_ipc::control::{
     FORY_ID_ROLLBACK, FORY_ID_SLOT_SWAP, FORY_ID_STAGE_DEPLOY_REQ, FORY_ID_STAGE_DEPLOY_RESP,
     FORY_ID_TEST_STATE,
 };
-use muconde_ipc::framing::{
+use mu_cd_ipc::framing::{
     is_known_msg_type, is_legacy_msg_type, read_frame, write_frame, IpcHeader, MSG_TYPE_HEARTBEAT,
     MSG_TYPE_IT_PROGRESS, MSG_TYPE_IT_REPORT, MSG_TYPE_LEASE_REQ,
 };

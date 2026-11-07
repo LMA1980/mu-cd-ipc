@@ -140,7 +140,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "muconde-ipc"
+name = "mu-cd-ipc"
 version = "0.2.0"
 dependencies = [
  "bytes",
