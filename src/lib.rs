@@ -50,7 +50,7 @@ mod tests {
         let req = DeploymentLeaseRequest {
             deployment_id: "dep-1".into(),
             node_id: "node-a".into(),
-            service_name: "muconde-agent".into(),
+            service_name: "mu-cd-agent".into(),
             artifact_sha256: "abc123".into(),
             requested_ttl_secs: 300,
         };
@@ -84,7 +84,7 @@ mod tests {
         let stage_req = StageDeploymentRequest {
             deployment_id: "dep-1".into(),
             lease_id: "lease-1".into(),
-            service_name: "muconde-agent".into(),
+            service_name: "mu-cd-agent".into(),
             artifact_sha256: "abc123".into(),
             target_slot: DeploymentSlot::SlotB,
         };
@@ -96,7 +96,7 @@ mod tests {
         let stage_resp = StageDeploymentResponse {
             deployment_id: "dep-1".into(),
             target_slot: DeploymentSlot::SlotB,
-            btrfs_subvolume_path: "/srv/muconde/slots/slot-b".into(),
+            btrfs_subvolume_path: "/srv/mucd/slots/slot-b".into(),
             staged_ok: true,
             error_message: None,
         };
@@ -108,10 +108,10 @@ mod tests {
         let swap = SlotSwapCommand {
             deployment_id: "dep-1".into(),
             lease_id: "lease-1".into(),
-            service_name: "muconde-agent".into(),
+            service_name: "mu-cd-agent".into(),
             from_slot: DeploymentSlot::SlotA,
             to_slot: DeploymentSlot::SlotB,
-            systemd_unit: "muconde-agent.service".into(),
+            systemd_unit: "mu-cd-agent.service".into(),
             warmup_timeout_secs: 30,
         };
         let bytes = fory.serialize(&swap).expect("serialize swap");
@@ -121,7 +121,7 @@ mod tests {
         let rollback = RollbackCommand {
             deployment_id: "dep-1".into(),
             lease_id: "lease-1".into(),
-            service_name: "muconde-agent".into(),
+            service_name: "mu-cd-agent".into(),
             restore_slot: DeploymentSlot::SlotA,
             failed_artifact_sha256: "abc123".into(),
             reason: "health probe timeout".into(),
@@ -132,7 +132,7 @@ mod tests {
 
         let report = IntegrationTestReport {
             deployment_id: "dep-1".into(),
-            service_name: "muconde-agent".into(),
+            service_name: "mu-cd-agent".into(),
             artifact_sha256: "abc123".into(),
             executed_tests: vec!["test_smoke".into(), "test_api".into()],
             passed: false,
@@ -146,7 +146,7 @@ mod tests {
 
         let taint = ArtifactTaintNotification {
             deployment_id: "dep-1".into(),
-            service_name: "muconde-agent".into(),
+            service_name: "mu-cd-agent".into(),
             artifact_sha256: "abc123".into(),
             tainted_at_epoch_ms: 1_700_000_005_000,
             reason: "failed post-swap integration test".into(),
@@ -160,7 +160,7 @@ mod tests {
         let probe = HealthProbeTelemetry {
             deployment_id: "dep-1".into(),
             node_id: "node-a".into(),
-            service_name: "muconde-agent".into(),
+            service_name: "mu-cd-agent".into(),
             active_slot: DeploymentSlot::SlotB,
             systemd_active: true,
             health_endpoint_ok: true,

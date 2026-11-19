@@ -164,7 +164,7 @@ async fn test_control_messages_roundtrip_all_11_types() {
     let req = DeploymentLeaseRequest {
         deployment_id: "dep-req-1".into(),
         node_id: "node-a".into(),
-        service_name: "muconde-agent".into(),
+        service_name: "mu-cd-agent".into(),
         artifact_sha256: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855".into(),
         requested_ttl_secs: 300,
     };
@@ -243,7 +243,7 @@ async fn test_control_messages_roundtrip_all_11_types() {
     let stage_req = StageDeploymentRequest {
         deployment_id: "dep-stage-1".into(),
         lease_id: "lease-101".into(),
-        service_name: "muconde-agent".into(),
+        service_name: "mu-cd-agent".into(),
         artifact_sha256: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855".into(),
         target_slot: DeploymentSlot::SlotB,
     };
@@ -269,7 +269,7 @@ async fn test_control_messages_roundtrip_all_11_types() {
     let stage_resp_ok = StageDeploymentResponse {
         deployment_id: "dep-stage-1".into(),
         target_slot: DeploymentSlot::SlotB,
-        btrfs_subvolume_path: "/srv/muconde/slots/slot-b".into(),
+        btrfs_subvolume_path: "/srv/mucd/slots/slot-b".into(),
         staged_ok: true,
         error_message: None,
     };
@@ -321,10 +321,10 @@ async fn test_control_messages_roundtrip_all_11_types() {
     let swap = SlotSwapCommand {
         deployment_id: "dep-swap-1".into(),
         lease_id: "lease-101".into(),
-        service_name: "muconde-agent".into(),
+        service_name: "mu-cd-agent".into(),
         from_slot: DeploymentSlot::SlotA,
         to_slot: DeploymentSlot::SlotB,
-        systemd_unit: "muconde-agent.service".into(),
+        systemd_unit: "mu-cd-agent.service".into(),
         warmup_timeout_secs: 45,
     };
     roundtrip_fory_frame(
@@ -342,7 +342,7 @@ async fn test_control_messages_roundtrip_all_11_types() {
     let rollback = RollbackCommand {
         deployment_id: "dep-swap-1".into(),
         lease_id: "lease-101".into(),
-        service_name: "muconde-agent".into(),
+        service_name: "mu-cd-agent".into(),
         restore_slot: DeploymentSlot::SlotA,
         failed_artifact_sha256: "badbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadb"
             .into(),
@@ -362,7 +362,7 @@ async fn test_control_messages_roundtrip_all_11_types() {
     // 8. IntegrationTestReport (passed)
     let report_ok = IntegrationTestReport {
         deployment_id: "dep-it-1".into(),
-        service_name: "muconde-agent".into(),
+        service_name: "mu-cd-agent".into(),
         artifact_sha256: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855".into(),
         executed_tests: vec![
             "smoke_test".into(),
@@ -388,7 +388,7 @@ async fn test_control_messages_roundtrip_all_11_types() {
     // 8. IntegrationTestReport (failed)
     let report_err = IntegrationTestReport {
         deployment_id: "dep-it-2".into(),
-        service_name: "muconde-agent".into(),
+        service_name: "mu-cd-agent".into(),
         artifact_sha256: "badbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadb".into(),
         executed_tests: vec!["smoke_test".into(), "api_endpoint_test".into()],
         passed: false,
@@ -417,7 +417,7 @@ async fn test_control_messages_roundtrip_all_11_types() {
     // 9. ArtifactTaintNotification
     let taint = ArtifactTaintNotification {
         deployment_id: "dep-taint-1".into(),
-        service_name: "muconde-agent".into(),
+        service_name: "mu-cd-agent".into(),
         artifact_sha256: "badbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadbadb".into(),
         tainted_at_epoch_ms: 1_700_000_200_000,
         reason: "Integration test failed: tainted and blacklisted from candidate slot promotion"
@@ -446,7 +446,7 @@ async fn test_control_messages_roundtrip_all_11_types() {
     let probe = HealthProbeTelemetry {
         deployment_id: "dep-probe-1".into(),
         node_id: "worker-riscv64".into(),
-        service_name: "muconde-agent".into(),
+        service_name: "mu-cd-agent".into(),
         active_slot: DeploymentSlot::SlotB,
         systemd_active: true,
         health_endpoint_ok: true,
