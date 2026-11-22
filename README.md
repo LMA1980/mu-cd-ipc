@@ -39,6 +39,8 @@ ______________________________________________________________________
 |                       | 0x0A: HealthProbeTelemetry                         |
 |                       | 0x0B: HeartbeatTelemetry                           |
 |                       | 0x0C: IntegrationTestProgress (0.2.0 additive)     |
+|                       | 0x0D: ScenarioExecutionPlan (0.3.0 additive)       |
+|                       | 0x0E: ScenarioPlanAck (0.3.0 additive)             |
 +-----------------------+----------------------------------------------------+
 ```
 
@@ -52,7 +54,7 @@ use zerocopy::{FromBytes, IntoBytes, KnownLayout, Immutable};
 pub struct IpcHeader {
     pub magic: [u8; 4],     // Canonical identifier: b"MCDE"
     pub version: u16,       // Wire protocol version (1)
-    pub msg_type: u16,      // Message type discriminant (0x01..=0x0C)
+    pub msg_type: u16,      // Message type discriminant (0x01..=0x0E)
     pub payload_len: u32,   // Payload length in bytes (excludes 24B header)
     pub flags: u32,         // FLAG_COMPRESSED (0x01), FLAG_END_OF_STREAM (0x02)
     pub sequence: u64,      // Monotonically increasing sequence number
@@ -81,11 +83,15 @@ Every frame carries a `msg_type` discriminant in the header; the payload is the 
 | `DeploymentSlot` (enum)     | —          | —                            | 12      | —                        | `SlotA` / `SlotB`                                                                                    |
 | `IntegrationTestProgress`   | `0x0C`     | `MSG_TYPE_IT_PROGRESS`       | 13      | Agent ➔ Controller       | **0.2.0.** Per-test gate progress (`Pending`/`Running`/`Passed`/`Failed`, `critical`, `duration_ms`) |
 | `TestState` (enum)          | —          | —                            | 14      | —                        | **0.2.0.** State of a single integration test                                                        |
+| `ScenarioExecutionPlan`     | `0x0D`     | `MSG_TYPE_SCENARIO_PLAN`     | 15      | Controller ➔ Agent       | **0.3.0.** Authoritative `it_archive_digest`, selected tests, scenarios, env/args, CIDRs, RO mounts  |
+| `ScenarioTestSpec`          | —          | —                            | 16      | —                        | **0.3.0.** Per-scenario live probe specification embedded in `ScenarioExecutionPlan`                 |
+| `ScenarioEnvVar`            | —          | —                            | 17      | —                        | **0.3.0.** Allowlisted key-value environment entry for sandboxed canary probes                       |
+| `ScenarioPlanAck`           | `0x0E`     | `MSG_TYPE_SCENARIO_PLAN_ACK` | 18      | Agent ➔ Controller       | **0.3.0.** Advisory acknowledgement of received `ScenarioExecutionPlan`                              |
 
 ### Registry Rules (Additive Only)
 
-- Fory IDs `1..=12` and discriminants `0x01..=0x0B` are **frozen**. New messages are appended with new IDs; existing IDs are never renumbered or reused.
-- Receivers dispatch on `msg_type` **before** decoding the payload and skip frames they do not recognize. A 0.1.x controller ignores `0x0C` progress frames and still decodes the final `IntegrationTestReport`; see `tests/it_progress_compat_tests.rs`. Use `is_legacy_msg_type()` / `is_known_msg_type()` to implement the same rule.
+- Fory IDs `1..=14` and discriminants `0x01..=0x0C` are **frozen**. New messages are appended with new IDs; existing IDs are never renumbered or reused.
+- Receivers dispatch on `msg_type` **before** decoding the payload and skip frames they do not recognize. A `0.3.0` controller writes `0x0D` (`ScenarioExecutionPlan`) immediately followed by `0x06` (`SlotSwapCommand`) without blocking on `0x0E` (`ScenarioPlanAck`), so `0.1.x`/`0.2.x` peers skip unknown frames cleanly; see `tests/it_progress_compat_tests.rs`. Use `is_legacy_msg_type()` / `is_known_msg_type()` to implement the same rule.
 - `IntegrationTestReport` stays the final verdict. `IntegrationTestProgress` is advisory live state for UIs and the controller's gate tracker.
 
 ### Downstream Dependency Update (Agent and Controller)

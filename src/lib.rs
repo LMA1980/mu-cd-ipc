@@ -9,7 +9,8 @@ pub mod framing;
 pub use control::{
     create_fory_runtime, ArtifactTaintNotification, DeploymentLeaseGrant, DeploymentLeaseRequest,
     DeploymentLeaseRevoke, DeploymentSlot, HealthProbeTelemetry, HeartbeatTelemetry,
-    IntegrationTestProgress, IntegrationTestReport, RollbackCommand, SlotSwapCommand,
+    IntegrationTestProgress, IntegrationTestReport, RollbackCommand, ScenarioEnvVar,
+    ScenarioExecutionPlan, ScenarioPlanAck, ScenarioTestSpec, SlotSwapCommand,
     StageDeploymentRequest, StageDeploymentResponse, TestState, FORY_ID_ARTIFACT_TAINT,
     FORY_ID_ARTIFACT_TAINT_NOTIFICATION, FORY_ID_DEPLOYMENT_LEASE_GRANT,
     FORY_ID_DEPLOYMENT_LEASE_REQUEST, FORY_ID_DEPLOYMENT_LEASE_REVOKE, FORY_ID_DEPLOYMENT_SLOT,
@@ -17,6 +18,8 @@ pub use control::{
     FORY_ID_HEARTBEAT_TELEMETRY, FORY_ID_INTEGRATION_TEST_PROGRESS,
     FORY_ID_INTEGRATION_TEST_REPORT, FORY_ID_IT_PROGRESS, FORY_ID_IT_REPORT, FORY_ID_LEASE_GRANT,
     FORY_ID_LEASE_REQ, FORY_ID_LEASE_REVOKE, FORY_ID_ROLLBACK, FORY_ID_ROLLBACK_COMMAND,
+    FORY_ID_SCENARIO_ENV_VAR, FORY_ID_SCENARIO_EXECUTION_PLAN, FORY_ID_SCENARIO_PLAN,
+    FORY_ID_SCENARIO_PLAN_ACK, FORY_ID_SCENARIO_SPEC, FORY_ID_SCENARIO_TEST_SPEC,
     FORY_ID_SLOT_SWAP, FORY_ID_SLOT_SWAP_COMMAND, FORY_ID_STAGE_DEPLOYMENT_REQUEST,
     FORY_ID_STAGE_DEPLOYMENT_RESPONSE, FORY_ID_STAGE_DEPLOY_REQ, FORY_ID_STAGE_DEPLOY_RESP,
     FORY_ID_TEST_STATE,
@@ -27,7 +30,8 @@ pub use framing::{
     FLAG_COMPRESSED, FLAG_END_OF_STREAM, HEADER_SIZE, MAGIC, MAX_FRAME_SIZE,
     MSG_TYPE_ARTIFACT_TAINT, MSG_TYPE_HEALTH_PROBE, MSG_TYPE_HEARTBEAT, MSG_TYPE_IT_PROGRESS,
     MSG_TYPE_IT_REPORT, MSG_TYPE_LEASE_GRANT, MSG_TYPE_LEASE_REQ, MSG_TYPE_LEASE_REVOKE,
-    MSG_TYPE_ROLLBACK, MSG_TYPE_SLOT_SWAP, MSG_TYPE_STAGE_DEPLOY_REQ, MSG_TYPE_STAGE_DEPLOY_RESP,
+    MSG_TYPE_ROLLBACK, MSG_TYPE_SCENARIO_PLAN, MSG_TYPE_SCENARIO_PLAN_ACK, MSG_TYPE_SLOT_SWAP,
+    MSG_TYPE_STAGE_DEPLOY_REQ, MSG_TYPE_STAGE_DEPLOY_RESP,
 };
 
 /// Protocol version identifier.
@@ -180,5 +184,73 @@ mod tests {
         let bytes = fory.serialize(&hb).expect("serialize hb");
         let decoded: HeartbeatTelemetry = fory.deserialize(&bytes).expect("deserialize hb");
         assert_eq!(hb, decoded);
+
+        let env_var = ScenarioEnvVar {
+            key: "MU_SMOKE_TARGET_URL".into(),
+            value: "https://service.cluster.internal:8445".into(),
+        };
+        let bytes = fory.serialize(&env_var).expect("serialize env_var");
+        let decoded: ScenarioEnvVar = fory.deserialize(&bytes).expect("deserialize env_var");
+        assert_eq!(env_var, decoded);
+
+        let spec = ScenarioTestSpec {
+            name: "smoke_example_node_a".into(),
+            test_binary: "smoke_example".into(),
+            args: vec!["--nocapture".into()],
+            env: vec![env_var.clone()],
+            cidrs: vec!["127.0.0.1/32".into(), "192.0.2.10/32".into()],
+            ro_mounts: vec!["/etc/mu-cd-canary/tls/ca.crt".into()],
+            critical: true,
+            timeout_secs: 15,
+        };
+        let bytes = fory.serialize(&spec).expect("serialize spec");
+        let decoded: ScenarioTestSpec = fory.deserialize(&bytes).expect("deserialize spec");
+        assert_eq!(spec, decoded);
+
+        let plan = ScenarioExecutionPlan {
+            deployment_id: "dep-1".into(),
+            lease_id: "lease-1".into(),
+            service_name: "mu-cd-agent".into(),
+            node_id: "node-a".into(),
+            policy_commit_sha: "0123456789abcdef0123456789abcdef01234567".into(),
+            it_archive_digest: Some(
+                "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa".into(),
+            ),
+            bundle_id: Some("bundle-001".into()),
+            selected_tests: vec!["systemd_unit_active".into(), "smoke_example".into()],
+            scenarios: vec![spec],
+            env: vec![env_var],
+            args: vec!["--nocapture".into()],
+            cidrs: vec!["127.0.0.1/32".into(), "192.0.2.10/32".into()],
+            ro_mounts: vec!["/etc/mu-cd-canary/tls/ca.crt".into()],
+            max_pids: 256,
+            max_memlock_kb: 65_536,
+            auto_rollback_on_critical: true,
+        };
+        let bytes = fory.serialize(&plan).expect("serialize plan");
+        let decoded: ScenarioExecutionPlan = fory.deserialize(&bytes).expect("deserialize plan");
+        assert_eq!(plan, decoded);
+
+        let ack = ScenarioPlanAck {
+            deployment_id: "dep-1".into(),
+            lease_id: "lease-1".into(),
+            accepted: true,
+            rejection_reason: None,
+        };
+        let bytes = fory.serialize(&ack).expect("serialize ack");
+        let decoded: ScenarioPlanAck = fory.deserialize(&bytes).expect("deserialize ack");
+        assert_eq!(ack, decoded);
+
+        let ack_rejected = ScenarioPlanAck {
+            deployment_id: "dep-1".into(),
+            lease_id: "lease-1".into(),
+            accepted: false,
+            rejection_reason: Some("max_pids exceeds host ceiling".into()),
+        };
+        let bytes = fory
+            .serialize(&ack_rejected)
+            .expect("serialize ack_rejected");
+        let decoded: ScenarioPlanAck = fory.deserialize(&bytes).expect("deserialize ack_rejected");
+        assert_eq!(ack_rejected, decoded);
     }
 }
