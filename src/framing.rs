@@ -24,18 +24,29 @@ pub const MSG_TYPE_HEARTBEAT: u16 = 0x0B;
 /// Discriminants `0x01..=0x0B` are frozen. Receivers must dispatch on `msg_type` and skip
 /// frames whose type they do not recognise (see [`is_legacy_msg_type`]).
 pub const MSG_TYPE_IT_PROGRESS: u16 = 0x0C;
+/// Added in 0.3.0 (additive): resolved [`crate::control::ScenarioExecutionPlan`] sent by
+/// `mu-cd-controller` before [`MSG_TYPE_SLOT_SWAP`] on the swap stream.
+pub const MSG_TYPE_SCENARIO_PLAN: u16 = 0x0D;
+/// Added in 0.3.0 (additive): advisory [`crate::control::ScenarioPlanAck`] emitted by
+/// `mu-cd-agent` upon validating and storing a [`crate::control::ScenarioExecutionPlan`].
+pub const MSG_TYPE_SCENARIO_PLAN_ACK: u16 = 0x0E;
 
 /// Returns `true` for the discriminants defined by protocol 0.1.x (`0x01..=0x0B`).
 ///
 /// A 0.1.x peer only understands these types; any other frame (such as
-/// [`MSG_TYPE_IT_PROGRESS`]) is skipped by its dispatch loop without decoding the payload.
+/// [`MSG_TYPE_IT_PROGRESS`], [`MSG_TYPE_SCENARIO_PLAN`], or [`MSG_TYPE_SCENARIO_PLAN_ACK`])
+/// is skipped by its dispatch loop without decoding the payload.
 pub fn is_legacy_msg_type(msg_type: u16) -> bool {
     (MSG_TYPE_LEASE_REQ..=MSG_TYPE_HEARTBEAT).contains(&msg_type)
 }
 
-/// Returns `true` for every discriminant known to this crate version.
+/// Returns `true` for every discriminant known to this crate version (`0x01..=0x0E`).
 pub fn is_known_msg_type(msg_type: u16) -> bool {
-    is_legacy_msg_type(msg_type) || msg_type == MSG_TYPE_IT_PROGRESS
+    is_legacy_msg_type(msg_type)
+        || matches!(
+            msg_type,
+            MSG_TYPE_IT_PROGRESS | MSG_TYPE_SCENARIO_PLAN | MSG_TYPE_SCENARIO_PLAN_ACK
+        )
 }
 
 // Flags

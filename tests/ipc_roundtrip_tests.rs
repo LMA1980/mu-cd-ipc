@@ -1,15 +1,16 @@
 use mu_cd_ipc::control::{
     create_fory_runtime, ArtifactTaintNotification, DeploymentLeaseGrant, DeploymentLeaseRequest,
     DeploymentLeaseRevoke, DeploymentSlot, HealthProbeTelemetry, HeartbeatTelemetry,
-    IntegrationTestReport, RollbackCommand, SlotSwapCommand, StageDeploymentRequest,
-    StageDeploymentResponse,
+    IntegrationTestReport, RollbackCommand, ScenarioEnvVar, ScenarioExecutionPlan, ScenarioPlanAck,
+    ScenarioTestSpec, SlotSwapCommand, StageDeploymentRequest, StageDeploymentResponse,
 };
 use mu_cd_ipc::error::IpcError;
 use mu_cd_ipc::framing::{
     read_frame, write_frame, IpcHeader, CURRENT_VERSION, HEADER_SIZE, MAGIC, MAX_FRAME_SIZE,
     MSG_TYPE_ARTIFACT_TAINT, MSG_TYPE_HEALTH_PROBE, MSG_TYPE_HEARTBEAT, MSG_TYPE_IT_REPORT,
     MSG_TYPE_LEASE_GRANT, MSG_TYPE_LEASE_REQ, MSG_TYPE_LEASE_REVOKE, MSG_TYPE_ROLLBACK,
-    MSG_TYPE_SLOT_SWAP, MSG_TYPE_STAGE_DEPLOY_REQ, MSG_TYPE_STAGE_DEPLOY_RESP,
+    MSG_TYPE_SCENARIO_PLAN, MSG_TYPE_SCENARIO_PLAN_ACK, MSG_TYPE_SLOT_SWAP,
+    MSG_TYPE_STAGE_DEPLOY_REQ, MSG_TYPE_STAGE_DEPLOY_RESP,
 };
 use tokio::io::{duplex, AsyncWriteExt, DuplexStream};
 use zerocopy::IntoBytes;
@@ -473,4 +474,83 @@ async fn test_control_messages_roundtrip_all_11_types() {
     };
     roundtrip_fory_frame(&fory, &mut client, &mut server, MSG_TYPE_HEARTBEAT, 27, &hb).await;
     roundtrip_json_frame(&mut client, &mut server, MSG_TYPE_HEARTBEAT, 28, &hb).await;
+
+    // 12. ScenarioExecutionPlan (0.3.0 additive)
+    let scenario_plan = ScenarioExecutionPlan {
+        deployment_id: "dep-plan-1".into(),
+        lease_id: "lease-101".into(),
+        service_name: "mu-cd-agent".into(),
+        node_id: "worker-riscv64".into(),
+        policy_commit_sha: "0123456789abcdef0123456789abcdef01234567".into(),
+        it_archive_digest: Some(
+            "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855".into(),
+        ),
+        bundle_id: Some("bundle-plan-1".into()),
+        selected_tests: vec!["systemd_unit_active".into(), "smoke_mu_cd_agent".into()],
+        scenarios: vec![ScenarioTestSpec {
+            name: "smoke_mu_cd_agent_worker_riscv64".into(),
+            test_binary: "smoke_mu_cd_agent".into(),
+            args: vec!["--nocapture".into()],
+            env: vec![ScenarioEnvVar {
+                key: "MU_SMOKE_TARGET_ADDR".into(),
+                value: "worker-riscv64.cluster.internal:8446".into(),
+            }],
+            cidrs: vec!["127.0.0.1/32".into(), "192.0.2.20/32".into()],
+            ro_mounts: vec!["/etc/mu-cd-canary/tls/ca.crt".into()],
+            critical: true,
+            timeout_secs: 10,
+        }],
+        env: vec![ScenarioEnvVar {
+            key: "MU_SMOKE_TIMEOUT_SECS".into(),
+            value: "10".into(),
+        }],
+        args: vec!["--nocapture".into()],
+        cidrs: vec!["127.0.0.1/32".into(), "192.0.2.20/32".into()],
+        ro_mounts: vec!["/etc/mu-cd-canary/tls/ca.crt".into()],
+        max_pids: 256,
+        max_memlock_kb: 65_536,
+        auto_rollback_on_critical: true,
+    };
+    roundtrip_fory_frame(
+        &fory,
+        &mut client,
+        &mut server,
+        MSG_TYPE_SCENARIO_PLAN,
+        29,
+        &scenario_plan,
+    )
+    .await;
+    roundtrip_json_frame(
+        &mut client,
+        &mut server,
+        MSG_TYPE_SCENARIO_PLAN,
+        30,
+        &scenario_plan,
+    )
+    .await;
+
+    // 13. ScenarioPlanAck (0.3.0 additive)
+    let scenario_ack = ScenarioPlanAck {
+        deployment_id: "dep-plan-1".into(),
+        lease_id: "lease-101".into(),
+        accepted: true,
+        rejection_reason: None,
+    };
+    roundtrip_fory_frame(
+        &fory,
+        &mut client,
+        &mut server,
+        MSG_TYPE_SCENARIO_PLAN_ACK,
+        31,
+        &scenario_ack,
+    )
+    .await;
+    roundtrip_json_frame(
+        &mut client,
+        &mut server,
+        MSG_TYPE_SCENARIO_PLAN_ACK,
+        32,
+        &scenario_ack,
+    )
+    .await;
 }
